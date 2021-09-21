@@ -9,7 +9,7 @@ metallic = 0.87
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.027451, 0.0313726, 0.74902, 1 )
 
-[node name="Spatial" type="Spatial"]
+[node name="Main" type="Spatial"]
 
 [node name="CSGBox" type="CSGBox" parent="."]
 width = 50.0
@@ -17,7 +17,7 @@ height = 0.0342128
 depth = 50.0
 material = SubResource( 1 )
 
-[node name="CSGCylinder" type="CSGCylinder" parent="."]
+[node name="Universe_Center" type="CSGCylinder" parent="."]
 radius = 0.446148
 height = 5.16398
 material = SubResource( 2 )
@@ -27,3 +27,27 @@ transform = Transform( 0.136498, 0.94844, -0.286059, -0.408448, 0.316957, 0.8559
 
 [node name="KinematicBody" parent="." instance=ExtResource( 1 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5435, 5.19593, 10.2911 )
+
+[node name="DebugGeometry" type="ImmediateGeometry" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="mousePosAim" type="ColorRect" parent="HUD"]
+margin_left = 46.0
+margin_top = 34.0
+margin_right = 56.0
+margin_bottom = 44.0
+color = Color( 0.87451, 0.32549, 0.32549, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="mouseShouldAim" type="ColorRect" parent="HUD"]
+margin_left = 68.3409
+margin_top = 33.5546
+margin_right = 77.3409
+margin_bottom = 43.5546
+color = Color( 0.0705882, 0.572549, 0.196078, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
