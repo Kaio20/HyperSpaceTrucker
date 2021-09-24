@@ -1,13 +1,15 @@
 extends KinematicBody
 
-export var speed = 15
+export var currentspeed = 0.0
+export var maxspeed = 25.0
+var speed_step = maxspeed / 5.0
 export var rot_speed = 0.85
 
 var velocity = Vector3.ZERO
 onready var universe_center = get_tree().get_root().get_node("/root/Main/Universe_Center")
 onready var ui_mousePosAim  = get_tree().get_root().get_node("/root/Main/HUD/mousePosAim")
 onready var ui_mouseShouldAim  = get_tree().get_root().get_node("/root/Main/HUD/mouseShouldAim")
-onready var debug_geometry  = get_tree().get_root().get_node("/root/Main/DebugGeometry")
+onready var tp_speed  = get_tree().get_root().get_node("/root/Main/HUD/MarginContainer/tpSpeed")
 
 #Position where the Player moves towards
 var mousePosAim
@@ -91,12 +93,20 @@ func get_input(delta):
 	
 	var vy = velocity.y
 	velocity = Vector3.ZERO
-	if Input.is_action_pressed("forward"):
-		velocity += -transform.basis.z * speed
-	if Input.is_action_pressed("back"):
-		velocity += transform.basis.z * speed
+	if Input.is_action_just_pressed("forward"):
+		if currentspeed < maxspeed:
+			currentspeed += speed_step
+	if Input.is_action_just_pressed("back"):
+		if currentspeed > 0:
+			currentspeed -= speed_step
+	#if Input.is_action_pressed("back"):
+	#	velocity += transform.basis.z * (currentspeed / maxspeed)
 	if Input.is_action_pressed("right"):
 		rotate_y(-rot_speed * delta)
 	if Input.is_action_pressed("left"):
 		rotate_y(rot_speed * delta)
+		
+	velocity += -transform.basis.z * ((currentspeed / maxspeed) * maxspeed )
 	velocity.y = vy
+	
+	tp_speed.value = (currentspeed / maxspeed)  * 100.0
