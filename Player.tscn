@@ -29,17 +29,6 @@ height = 3.72767
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
 shape = SubResource( 1 )
 
-[node name="gravity" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.10729, 0.986001, 0.217597 )
-
-[node name="CSGCylinder" type="CSGCylinder" parent="gravity"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
-radius = 0.141223
-height = 1.58309
-
-[node name="CSGBox" type="CSGBox" parent="gravity"]
-transform = Transform( 0.257807, 0, 0, 0, 0.257807, 0, 0, 0, 0.257807, 0, 0, 0 )
-
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.83789, 0.545839, 0, -0.545839, 0.83789, 0, 2.56397, 4.95487 )
 fov = 110.0
