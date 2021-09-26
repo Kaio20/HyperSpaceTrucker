@@ -29,9 +29,20 @@ height = 3.72767
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
 shape = SubResource( 1 )
 
-[node name="Camera" type="Camera" parent="."]
+[node name="MoveTowards" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10 )
+
+[node name="CSGSphere" type="CSGSphere" parent="MoveTowards"]
+visible = false
+
+[node name="ShouldMoveTowards" type="Spatial" parent="."]
+
+[node name="CSGTorus" type="CSGTorus" parent="ShouldMoveTowards"]
+visible = false
+outer_radius = 1.09282
+
+[node name="CameraSpatial" type="Spatial" parent="."]
+
+[node name="OuterCamera" type="Camera" parent="CameraSpatial"]
 transform = Transform( 1, 0, 0, 0, 0.83789, 0.545839, 0, -0.545839, 0.83789, 0, 2.56397, 4.95487 )
 fov = 110.0
-
-[node name="MoveTowards" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.94948 )

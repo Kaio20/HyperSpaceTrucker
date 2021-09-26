@@ -6,10 +6,15 @@ var speed_step = maxspeed / 5.0
 export var rot_speed = 0.85
 
 var velocity = Vector3.ZERO
+var camera_spatial_reset
+
 onready var universe_center = get_tree().get_root().get_node("/root/Main/Universe_Center")
 onready var ui_mousePosAim  = get_tree().get_root().get_node("/root/Main/HUD/mousePosAim")
 onready var ui_mouseShouldAim  = get_tree().get_root().get_node("/root/Main/HUD/mouseShouldAim")
 onready var tp_speed  = get_tree().get_root().get_node("/root/Main/HUD/MarginContainer/tpSpeed")
+onready var outer_camera = $CameraSpatial/OuterCamera
+onready var camera_sptial = $CameraSpatial
+
 
 #Position where the Player moves towards
 var mousePosAim
@@ -20,6 +25,7 @@ var move_2d
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+	camera_spatial_reset = camera_sptial.transform.basis
 
 func _physics_process(delta):
 	get_input(delta)
@@ -27,11 +33,16 @@ func _physics_process(delta):
 		
 	mousePosAim = $MoveTowards.global_transform
 	
-	ui_mousePosAim.rect_position.x =  $Camera.unproject_position(mousePosAim.origin).x - ( ui_mousePosAim.rect_size.x / 2 ) 
-	ui_mousePosAim.rect_position.y =  $Camera.unproject_position(mousePosAim.origin).y - ( ui_mousePosAim.rect_size.y / 2 )
+	ui_mousePosAim.rect_position.x =  outer_camera.unproject_position(mousePosAim.origin).x - ( ui_mousePosAim.rect_size.x / 2 ) 
+	ui_mousePosAim.rect_position.y =  outer_camera.unproject_position(mousePosAim.origin).y - ( ui_mousePosAim.rect_size.y / 2 )
 	
-	ui_mouseShouldAim.rect_position.x = get_viewport().get_mouse_position().x - ( ui_mouseShouldAim.rect_size.x / 2 ) 
-	ui_mouseShouldAim.rect_position.y = get_viewport().get_mouse_position().y - ( ui_mouseShouldAim.rect_size.y / 2 )
+	$ShouldMoveTowards.global_transform.origin = outer_camera.project_position(get_viewport().get_mouse_position(), 5)
+	
+	ui_mouseShouldAim.rect_position.x = outer_camera.unproject_position($ShouldMoveTowards.global_transform.origin).x - ( ui_mousePosAim.rect_size.x / 2 ) 
+	ui_mouseShouldAim.rect_position.y = outer_camera.unproject_position($ShouldMoveTowards.global_transform.origin).y - ( ui_mousePosAim.rect_size.y / 2 ) 
+	
+	#ui_mouseShouldAim.rect_position.x = get_viewport().get_mouse_position().x - ( ui_mouseShouldAim.rect_size.x / 2 ) 
+	#ui_mouseShouldAim.rect_position.y = get_viewport().get_mouse_position().y - ( ui_mouseShouldAim.rect_size.y / 2 )
 	
 	move_2d = (ui_mouseShouldAim.rect_position - ui_mousePosAim.rect_position).normalized()
 	
@@ -53,6 +64,11 @@ export var yaw_speed = 0.5
 
 func get_input(delta):
 	
+	if Input.is_action_pressed("camera_rotate"):
+		var x_delta = get_viewport().size.x - get_viewport().get_mouse_position().x
+		camera_sptial.transform.basis = transform.basis.rotated(transform.basis.y, x_delta * delta)
+	else:
+		camera_sptial.transform.basis = camera_spatial_reset
 	if move_2d:
 		pitch_input = lerp(pitch_input, move_2d.y * -1, input_response * delta)	
 		yaw_input = lerp(yaw_input, move_2d.x * -1, input_response * delta)
