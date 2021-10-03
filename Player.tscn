@@ -50,6 +50,9 @@ outer_radius = 1.09282
 
 [node name="CameraSpatial" type="Spatial" parent="."]
 
-[node name="OuterCamera" type="Camera" parent="CameraSpatial"]
-transform = Transform( 1, 0, 0, 0, 0.83789, 0.545839, 0, -0.545839, 0.83789, 0, 2.56397, 4.95487 )
+[node name="SpringArm" type="SpringArm" parent="CameraSpatial"]
+spring_length = 5.0
+
+[node name="OuterCamera" type="Camera" parent="CameraSpatial/SpringArm"]
+transform = Transform( 1, 0, 0, 0, 0.819152, 0.573577, 0, -0.573577, 0.819152, 0, 2.564, 0 )
 fov = 110.0

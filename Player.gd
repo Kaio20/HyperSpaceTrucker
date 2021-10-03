@@ -1,10 +1,5 @@
 extends KinematicBody
 
-export var currentspeed = 0.0
-export var maxspeed = 25.0
-var speed_step = maxspeed / 5.0
-export var rot_speed = 0.85
-
 var velocity = Vector3.ZERO
 var camera_spatial_reset
 
@@ -12,15 +7,34 @@ onready var universe_center = get_tree().get_root().get_node("/root/Main/Univers
 onready var ui_soll  = get_tree().get_root().get_node("/root/Main/HUD/ui_soll")
 onready var ui_ist  = get_tree().get_root().get_node("/root/Main/HUD/ui_ist")
 onready var tp_speed  = get_tree().get_root().get_node("/root/Main/HUD/MarginContainer/tpSpeed")
-onready var outer_camera = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial/OuterCamera")
-onready var camera_spatial = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial")
-onready var base_soll = get_tree().get_root().get_node("/root/Main/Player/BaseSoll")
-onready var soll = get_tree().get_root().get_node("/root/Main/Player/BaseSoll/Soll")
+onready var outer_camera: Camera = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial/SpringArm/OuterCamera")
+onready var camera_spatial: Spatial = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial")
+onready var base_soll: Spatial = get_tree().get_root().get_node("/root/Main/Player/BaseSoll")
+onready var soll: Spatial = get_tree().get_root().get_node("/root/Main/Player/BaseSoll/Soll")
 
 #2D Vector between Ist and Soll
-var move_2d
+var move_2d: Vector2
 #2D Vector of Mouse Movement
-var mouse_move
+var mouse_move: Vector2
+
+# Camera related
+var min_look_angle = -40
+var max_look_angle = 85
+var look_modifier = 40
+
+# Movement related
+var pitch_input = 0
+var roll_input = 0	
+var yaw_input = 0
+export var input_response = 8.0
+export var pitch_speed = 0.5
+export var roll_speed = 0.9
+export var yaw_speed = 0.5
+
+#Gear System related
+export var currentspeed = 0.0
+export var maxspeed = 25.0
+var speed_step = maxspeed / 5.0
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
@@ -28,7 +42,7 @@ func _ready():
 	camera_spatial_reset = camera_spatial.transform.basis
 	
 func _input(event):
-	if event.get_class() == "InputEventMouseMotion":
+	if event is InputEventMouseMotion:
 		mouse_move = (event.relative).normalized()
 
 func _physics_process(delta):
@@ -41,11 +55,13 @@ func _physics_process(delta):
 		base_soll.global_transform.origin = $Plane.global_transform.origin
 		
 	if mouse_move:
-		base_soll.rotate_x(-mouse_move.y * delta)
+		base_soll.rotation_degrees.x -= mouse_move.y * delta * look_modifier
+		#Restrict the max Movement of the Rotation to combat an infinite rotation
+		base_soll.rotation_degrees.x = clamp(base_soll.rotation_degrees.x, min_look_angle, max_look_angle)
 		base_soll.rotate_y(-mouse_move.x * delta)
 		mouse_move = Vector2(0,0)
 	
-	outer_camera.look_at(soll.global_transform.origin, Vector3.UP)
+	camera_spatial.look_at(soll.global_transform.origin, Vector3.UP)
 	
 	ui_soll.rect_position.x = outer_camera.unproject_position(soll.global_transform.origin).x - ( ui_soll.rect_size.x / 2 ) 
 	ui_soll.rect_position.y = outer_camera.unproject_position(soll.global_transform.origin).y - ( ui_soll.rect_size.y / 2 ) 
@@ -53,23 +69,12 @@ func _physics_process(delta):
 	ui_ist.rect_position.x =  outer_camera.unproject_position($BaseIst/Ist.global_transform.origin).x - ( ui_ist.rect_size.x / 2 ) 
 	ui_ist.rect_position.y =  outer_camera.unproject_position($BaseIst/Ist.global_transform.origin).y - ( ui_ist.rect_size.y / 2 )
 	
-	move_2d = (ui_soll.rect_position - ui_ist.rect_position).normalized()
 	
-	#debug_geometry.clear()
-	#debug_geometry.begin(PrimitiveMesh.PRIMITIVE_LINES)
-	#debug_geometry.set_color(Color(1,1,1))
-	#debug_geometry.add_vertex(self.transform.origin) 
-	#debug_geometry.add_vertex(mousePosAim.origin) 		
-	#debug_geometry.end())
+	if (ui_soll.rect_position - ui_ist.rect_position).length() > 2:
+		move_2d = (ui_soll.rect_position - ui_ist.rect_position).normalized()
+	else:
+		move_2d = Vector2.ZERO #Cancel movement if the deviation is too low
 	
-	
-var pitch_input = 0
-var roll_input = 0	
-var yaw_input = 0
-export var input_response = 8.0
-export var pitch_speed = 0.5
-export var roll_speed = 0.9
-export var yaw_speed = 0.5
 
 func get_input(delta):
 	
