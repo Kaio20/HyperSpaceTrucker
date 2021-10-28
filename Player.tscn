@@ -59,3 +59,4 @@ shape = SubResource( 2 )
 [node name="OuterCamera" type="Camera" parent="CameraSpatial/SpringArm"]
 transform = Transform( 1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0, 0 )
 fov = 90.0
+far = 800.0
