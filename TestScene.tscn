@@ -17,7 +17,7 @@ uv1_triplanar = true
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.027451, 0.0313726, 0.74902, 1 )
 
-[sub_resource type="ProceduralSky" id=5]
+[sub_resource type="ProceduralSky" id=3]
 sky_curve = 0.79889
 ground_bottom_color = Color( 0.129412, 0.415686, 0.701961, 1 )
 ground_horizon_color = Color( 0.839216, 0.917647, 0.980392, 1 )
@@ -27,7 +27,7 @@ sun_curve = 0.0901252
 
 [sub_resource type="Environment" id=4]
 background_mode = 2
-background_sky = SubResource( 5 )
+background_sky = SubResource( 3 )
 fog_enabled = true
 fog_color = Color( 0.701961, 0.501961, 0.635294, 1 )
 fog_depth_begin = 20.0
