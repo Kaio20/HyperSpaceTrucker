@@ -53,7 +53,7 @@ outer_radius = 1.09282
 [node name="CameraSpatial" type="Spatial" parent="."]
 
 [node name="SpringArm" type="SpringArm" parent="CameraSpatial"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6.05912 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8 )
 shape = SubResource( 2 )
 
 [node name="OuterCamera" type="Camera" parent="CameraSpatial/SpringArm"]

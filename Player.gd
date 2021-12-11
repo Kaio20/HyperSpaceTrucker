@@ -14,13 +14,15 @@ onready var soll: Spatial = get_tree().get_root().get_node("/root/Main/Player/Ba
 
 #2D Vector between Ist and Soll
 var move_2d: Vector2
+#2D Vector for tolerance, the Soll clamps to Ist after reaching this limit
+export var move_2d_tolerance = 3
 #2D Vector of Mouse Movement
 var mouse_move: Vector2
 
 # Camera related
-var min_look_angle = -40
-var max_look_angle = 85
-var look_modifier = 40
+export(int, -90, 0) var min_look_angle = -40
+export(int, 0, 90) var max_look_angle = 85
+export(int, 40, 120) var look_modifier = 80 #Look speed
 
 # Movement related
 var pitch_input = 0
@@ -70,10 +72,11 @@ func _physics_process(delta):
 	ui_ist.rect_position.y =  outer_camera.unproject_position($BaseIst/Ist.global_transform.origin).y - ( ui_ist.rect_size.y / 2 )
 	
 	
-	if (ui_soll.rect_position - ui_ist.rect_position).length() > 2:
+	if (ui_soll.rect_position - ui_ist.rect_position).length() > move_2d_tolerance:
 		move_2d = (ui_soll.rect_position - ui_ist.rect_position).normalized()
 	else:
 		move_2d = Vector2.ZERO #Cancel movement if the deviation is too low
+		ui_ist.rect_position = ui_soll.rect_position
 	
 
 func get_input(delta):
