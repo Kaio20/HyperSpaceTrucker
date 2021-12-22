@@ -20,9 +20,10 @@ export var move_2d_tolerance = 3
 var mouse_move: Vector2
 
 # Camera related
-export(int, -90, 0) var min_look_angle = -40
+export(int, -90, 0) var min_look_angle = -85
 export(int, 0, 90) var max_look_angle = 85
-export(int, 40, 120) var look_modifier = 80 #Look speed
+export(int, 40, 120) var look_modifier = 120 #Look speed
+export(int, 0, 6) var rotate_modifier = 4 #Speed of the spaceship turning
 
 # Movement related
 var pitch_input = 0
@@ -73,11 +74,40 @@ func _physics_process(delta):
 	
 	
 	if (ui_soll.rect_position - ui_ist.rect_position).length() > move_2d_tolerance:
-		move_2d = (ui_soll.rect_position - ui_ist.rect_position).normalized()
+		look_towards(delta, self, soll, rotate_modifier, false)
 	else:
-		move_2d = Vector2.ZERO #Cancel movement if the deviation is too low
 		ui_ist.rect_position = ui_soll.rect_position
 	
+#Build a proxy object, so we can use look_at
+func look_towards(delta, node: Object, vector, smooth_speed:= 1.0, return_only:= false):
+	var smooth
+	
+	if smooth_speed == 0:
+		smooth = false
+	else:
+		smooth = true
+	if vector is Object:
+		vector = vector.global_transform.origin
+	elif !vector is Vector3:
+		print("No target to look towards")
+		get_tree().paused = true
+		return
+		
+	var looker = Spatial.new()
+	node.add_child(looker)
+	looker.look_at(vector, Vector3.UP)
+	var finalRot = node.rotation_degrees + looker.rotation_degrees
+	
+	if return_only == true:
+		return finalRot
+	elif smooth == false:
+		node.rotation_degrees = finalRot
+	else:
+		looker.look_at(vector, Vector3.UP)
+		finalRot = node.rotation_degrees + looker.rotation_degrees
+		node.rotation_degrees = lerp(node.rotation_degrees, finalRot, delta*smooth_speed)
+	looker.queue_free()
+	pass
 
 func get_input(delta):
 	
@@ -87,8 +117,8 @@ func get_input(delta):
 	else:
 		camera_spatial.transform.basis = camera_spatial_reset
 	if move_2d:
-		pitch_input = lerp(pitch_input, move_2d.y * -1, input_response * delta)	
-		yaw_input = lerp(yaw_input, move_2d.x * -1, input_response * delta)
+		#pitch_input = lerp(pitch_input, move_2d.y * -1, input_response * delta)	
+		#yaw_input = lerp(yaw_input, move_2d.x * -1, input_response * delta)
 		roll_input = lerp(roll_input,
 			Input.get_action_strength("left") - Input.get_action_strength("right"),
 			input_response * delta)
