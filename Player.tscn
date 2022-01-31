@@ -39,6 +39,7 @@ shape = SubResource( 1 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10 )
 
 [node name="CSGSphere" type="CSGSphere" parent="KinematicBody/BaseIst/Ist"]
+visible = false
 
 [node name="BaseSoll" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.939693, -0.34202, 0, 0.34202, 0.939693, 0, 0, 0 )
@@ -48,6 +49,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10 )
 
 [node name="CSGTorus" type="CSGTorus" parent="BaseSoll/Soll"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0183222, 0.00186181, 0.00511932 )
+visible = false
 outer_radius = 1.09282
 
 [node name="CameraSpatial" type="Spatial" parent="."]

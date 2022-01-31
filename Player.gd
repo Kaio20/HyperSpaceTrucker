@@ -50,6 +50,7 @@ func _input(event):
 
 func _physics_process(delta):
 	get_input(delta)
+	#var rotVelocity = velocity.rotated($BaseIst/Ist.global_transform.origin, rotation.y)
 	velocity = move_and_slide(velocity, Vector3.UP)
 		
 	if camera_spatial:
@@ -136,8 +137,10 @@ func get_input(delta):
 	if Input.is_action_just_pressed("back"):
 		if currentspeed > 0:
 			currentspeed -= speed_step
+			
+	if Input.is_action_just_pressed("up"):
+		vy += -vy * ((currentspeed / maxspeed) * maxspeed ) * delta
 		
 	velocity += -transform.basis.z * ((currentspeed / maxspeed) * maxspeed )
-	velocity.y = vy
 	
 	tp_speed.value = (currentspeed / maxspeed)  * 100.0
