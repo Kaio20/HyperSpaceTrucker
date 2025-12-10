@@ -1,64 +1,49 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=4 format=3 uid="uid://dqwp7m3x2r4ht"]
 
-[ext_resource path="res://Player.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://Player.gd" id="1"]
 
-[sub_resource type="CapsuleShape" id=1]
+[sub_resource type="CapsuleShape3D" id="1"]
 radius = 0.509339
 height = 3.32466
 
-[sub_resource type="RayShape" id=2]
+[sub_resource type="SeparationRayShape3D" id="2"]
 
-[node name="PlayerRoot" type="Spatial"]
+[node name="Player" type="Node3D"]
+script = ExtResource("1")
 
-[node name="KinematicBody" type="KinematicBody" parent="."]
-script = ExtResource( 1 )
+[node name="Ship" type="CharacterBody3D" parent="."]
 
-[node name="Plane" type="Spatial" parent="KinematicBody"]
-transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0 )
+[node name="Mesh" type="Node3D" parent="Ship"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0)
 
-[node name="CSGCombiner" type="CSGCombiner" parent="KinematicBody/Plane"]
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="Ship/Mesh"]
 
-[node name="CSGBox" type="CSGBox" parent="KinematicBody/Plane/CSGCombiner"]
-transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.570967, 0.512486, 0 )
-width = 1.20766
-height = 0.894382
-depth = 0.626025
+[node name="CSGBox3D" type="CSGBox3D" parent="Ship/Mesh/CSGCombiner3D"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.570967, 0.512486, 0)
+size = Vector3(1.20766, 0.894382, 0.626025)
 
-[node name="CSGSpehere" type="CSGCylinder" parent="KinematicBody/Plane/CSGCombiner"]
-transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="Ship/Mesh/CSGCombiner3D"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
 radius = 0.459515
 height = 3.72767
 
-[node name="CollisionShape" type="CollisionShape" parent="KinematicBody"]
-transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
-shape = SubResource( 1 )
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ship"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+shape = SubResource("1")
 
-[node name="BaseIst" type="Spatial" parent="KinematicBody"]
+[node name="ActualAimPoint" type="Node3D" parent="Ship"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
 
-[node name="Ist" type="Spatial" parent="KinematicBody/BaseIst"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10 )
+[node name="TargetPivot" type="Node3D" parent="."]
 
-[node name="CSGSphere" type="CSGSphere" parent="KinematicBody/BaseIst/Ist"]
-visible = false
+[node name="TargetAimPoint" type="Node3D" parent="TargetPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
 
-[node name="BaseSoll" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.939693, -0.34202, 0, 0.34202, 0.939693, 0, 0, 0 )
+[node name="SpringArm3D" type="SpringArm3D" parent="TargetPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
+shape = SubResource("2")
 
-[node name="Soll" type="Spatial" parent="BaseSoll"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10 )
-
-[node name="CSGTorus" type="CSGTorus" parent="BaseSoll/Soll"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0183222, 0.00186181, 0.00511932 )
-visible = false
-outer_radius = 1.09282
-
-[node name="CameraSpatial" type="Spatial" parent="."]
-
-[node name="SpringArm" type="SpringArm" parent="CameraSpatial"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8 )
-shape = SubResource( 2 )
-
-[node name="OuterCamera" type="Camera" parent="CameraSpatial/SpringArm"]
-transform = Transform( 1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0, 0 )
+[node name="Camera3D" type="Camera3D" parent="TargetPivot/SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0, 0)
 fov = 90.0
 far = 800.0

@@ -1,146 +1,117 @@
-extends KinematicBody
+extends Node3D
 
-var velocity = Vector3.ZERO
-var camera_spatial_reset
+# Node references
+@onready var ship: CharacterBody3D = $Ship
+@onready var target_pivot: Node3D = $TargetPivot
+@onready var target_aim_point: Node3D = $TargetPivot/TargetAimPoint
+@onready var actual_aim_point: Node3D = $Ship/ActualAimPoint
+@onready var camera: Camera3D = $TargetPivot/SpringArm3D/Camera3D
 
-onready var universe_center = get_tree().get_root().get_node("/root/Main/Universe_Center")
-onready var ui_soll  = get_tree().get_root().get_node("/root/Main/HUD/ui_soll")
-onready var ui_ist  = get_tree().get_root().get_node("/root/Main/HUD/ui_ist")
-onready var tp_speed  = get_tree().get_root().get_node("/root/Main/HUD/MarginContainer/tpSpeed")
-onready var outer_camera: Camera = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial/SpringArm/OuterCamera")
-onready var camera_spatial: Spatial = get_tree().get_root().get_node("/root/Main/Player/CameraSpatial")
-onready var base_soll: Spatial = get_tree().get_root().get_node("/root/Main/Player/BaseSoll")
-onready var soll: Spatial = get_tree().get_root().get_node("/root/Main/Player/BaseSoll/Soll")
+# UI references
+@onready var ui_target = get_node("/root/Main/HUD/ui_soll")
+@onready var ui_actual = get_node("/root/Main/HUD/ui_ist")
+@onready var tp_speed = get_node("/root/Main/HUD/MarginContainer/tpSpeed")
 
-#2D Vector between Ist and Soll
-var move_2d: Vector2
-#2D Vector for tolerance, the Soll clamps to Ist after reaching this limit
-export var move_2d_tolerance = 3
-#2D Vector of Mouse Movement
-var mouse_move: Vector2
+# Mouse input
+var mouse_delta: Vector2 = Vector2.ZERO
 
-# Camera related
-export(int, -90, 0) var min_look_angle = -85
-export(int, 0, 90) var max_look_angle = 85
-export(int, 40, 120) var look_modifier = 120 #Look speed
-export(int, 0, 6) var rotate_modifier = 4 #Speed of the spaceship turning
+# Target control (player-controlled, 360° free movement)
+@export var mouse_sensitivity: float = 0.3
 
-# Movement related
-var pitch_input = 0
-var roll_input = 0	
-var yaw_input = 0
-export var input_response = 8.0
-export var pitch_speed = 0.5
-export var roll_speed = 0.9
-export var yaw_speed = 0.5
+# Ship rotation (follows target at fixed speed)
+@export var ship_rotation_speed: float = 2.0
 
-#Gear System related
-export var currentspeed = 0.0
-export var maxspeed = 25.0
-var speed_step = maxspeed / 5.0
+# Movement
+@export var max_speed: float = 3.0 * 0.1
+@export var acceleration: float = 1.2 * 0.1
+@export var deceleration: float = 0.75 * 0.1
+var current_speed: float = 0.0
 
-func _ready():
-	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+
+func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	camera_spatial_reset = camera_spatial.transform.basis
-	
-func _input(event):
+
+	# Sync target pivot rotation with ship's initial rotation
+	target_pivot.global_transform.basis = ship.global_transform.basis
+
+
+func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		mouse_move = (event.relative).normalized()
+		mouse_delta = event.relative
 
-func _physics_process(delta):
-	get_input(delta)
-	#var rotVelocity = velocity.rotated($BaseIst/Ist.global_transform.origin, rotation.y)
-	velocity = move_and_slide(velocity, Vector3.UP)
-		
-	if camera_spatial:
-		camera_spatial.global_transform.origin = $Plane.global_transform.origin
-	if base_soll:
-		base_soll.global_transform.origin = $Plane.global_transform.origin
-		
-	if mouse_move:
-		base_soll.rotation_degrees.x -= mouse_move.y * delta * look_modifier
-		#Restrict the max Movement of the Rotation to combat an infinite rotation
-		base_soll.rotation_degrees.x = clamp(base_soll.rotation_degrees.x, min_look_angle, max_look_angle)
-		base_soll.rotate_y(-mouse_move.x * delta)
-		mouse_move = Vector2(0,0)
-	
-	camera_spatial.look_at(soll.global_transform.origin, Vector3.UP)
-	
-	ui_soll.rect_position.x = outer_camera.unproject_position(soll.global_transform.origin).x - ( ui_soll.rect_size.x / 2 ) 
-	ui_soll.rect_position.y = outer_camera.unproject_position(soll.global_transform.origin).y - ( ui_soll.rect_size.y / 2 ) 
-	
-	ui_ist.rect_position.x =  outer_camera.unproject_position($BaseIst/Ist.global_transform.origin).x - ( ui_ist.rect_size.x / 2 ) 
-	ui_ist.rect_position.y =  outer_camera.unproject_position($BaseIst/Ist.global_transform.origin).y - ( ui_ist.rect_size.y / 2 )
-	
-	
-	if (ui_soll.rect_position - ui_ist.rect_position).length() > move_2d_tolerance:
-		look_towards(delta, self, soll, rotate_modifier, false)
-	else:
-		ui_ist.rect_position = ui_soll.rect_position
-	
-#Build a proxy object, so we can use look_at
-func look_towards(delta, node: Object, vector, smooth_speed:= 1.0, return_only:= false):
-	var smooth
-	
-	if smooth_speed == 0:
-		smooth = false
-	else:
-		smooth = true
-	if vector is Object:
-		vector = vector.global_transform.origin
-	elif !vector is Vector3:
-		print("No target to look towards")
-		get_tree().paused = true
-		return
-		
-	var looker = Spatial.new()
-	node.add_child(looker)
-	looker.look_at(vector, Vector3.UP)
-	var finalRot = node.rotation_degrees + looker.rotation_degrees
-	
-	if return_only == true:
-		return finalRot
-	elif smooth == false:
-		node.rotation_degrees = finalRot
-	else:
-		looker.look_at(vector, Vector3.UP)
-		finalRot = node.rotation_degrees + looker.rotation_degrees
-		node.rotation_degrees = lerp(node.rotation_degrees, finalRot, delta*smooth_speed)
-	looker.queue_free()
-	pass
+	if event.is_action_pressed("ui_cancel"):
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
-func get_input(delta):
-	
-	if Input.is_action_pressed("camera_rotate"):
-		var x_delta = get_viewport().size.x - get_viewport().get_mouse_position().x
-		camera_spatial.transform.basis = transform.basis.rotated(transform.basis.y, x_delta * delta)
+
+func _physics_process(delta: float) -> void:
+	handle_target_input(delta)
+	rotate_ship_toward_target(delta)
+	handle_movement(delta)
+	update_ui()
+
+
+func handle_target_input(delta: float) -> void:
+	# Rotate target pivot based on mouse input (full 360° freedom)
+	if mouse_delta:
+		target_pivot.rotate_y(-mouse_delta.x * mouse_sensitivity * delta)
+		target_pivot.rotate_object_local(Vector3.RIGHT, -mouse_delta.y * mouse_sensitivity * delta)
+		mouse_delta = Vector2.ZERO
+
+
+func rotate_ship_toward_target(delta: float) -> void:
+	# Get direction from ship to target aim point
+	var target_direction: Vector3 = (target_aim_point.global_position - ship.global_position).normalized()
+
+	# Current forward direction of the ship
+	var current_forward: Vector3 = -ship.global_transform.basis.z.normalized()
+
+	# Calculate the rotation needed
+	if current_forward.dot(target_direction) < 0.9999:
+		# Create a basis that looks at the target
+		var target_basis := Basis.looking_at(target_direction, Vector3.UP)
+
+		# Spherically interpolate the ship's rotation toward target
+		var current_quat := ship.global_transform.basis.get_rotation_quaternion()
+		var target_quat := target_basis.get_rotation_quaternion()
+		var new_quat := current_quat.slerp(target_quat, ship_rotation_speed * delta)
+
+		ship.global_transform.basis = Basis(new_quat)
+
+
+func handle_movement(delta: float) -> void:
+	# Accelerate while holding forward, decelerate otherwise
+	if Input.is_action_pressed("forward"):
+		current_speed = minf(current_speed + acceleration * delta, max_speed)
+	elif Input.is_action_pressed("back"):
+		current_speed = maxf(current_speed - acceleration * delta, -max_speed * 0.5)
 	else:
-		camera_spatial.transform.basis = camera_spatial_reset
-	if move_2d:
-		#pitch_input = lerp(pitch_input, move_2d.y * -1, input_response * delta)	
-		#yaw_input = lerp(yaw_input, move_2d.x * -1, input_response * delta)
-		roll_input = lerp(roll_input,
-			Input.get_action_strength("left") - Input.get_action_strength("right"),
-			input_response * delta)
-				
-		transform.basis = transform.basis.rotated(transform.basis.z, roll_input * roll_speed * delta)
-		transform.basis = transform.basis.rotated(transform.basis.x, pitch_input * pitch_speed * delta)
-		transform.basis = transform.basis.rotated(transform.basis.y, yaw_input * yaw_speed * delta)
-		transform.basis = transform.basis.orthonormalized()
-	
-	var vy = velocity.y
-	velocity = Vector3.ZERO
-	if Input.is_action_just_pressed("forward"):
-		if currentspeed < maxspeed:
-			currentspeed += speed_step
-	if Input.is_action_just_pressed("back"):
-		if currentspeed > 0:
-			currentspeed -= speed_step
-			
-	if Input.is_action_just_pressed("up"):
-		vy += -vy * ((currentspeed / maxspeed) * maxspeed ) * delta
-		
-	velocity += -transform.basis.z * ((currentspeed / maxspeed) * maxspeed )
-	
-	tp_speed.value = (currentspeed / maxspeed)  * 100.0
+		# Gradually slow down when no input
+		if current_speed > 0:
+			current_speed = maxf(current_speed - deceleration * delta, 0.0)
+		elif current_speed < 0:
+			current_speed = minf(current_speed + deceleration * delta, 0.0)
+
+	# Move ship forward in its facing direction
+	var move_direction: Vector3 = -ship.global_transform.basis.z.normalized()
+	ship.velocity = move_direction * current_speed
+	ship.move_and_slide()
+
+	# Keep root node at ship position
+	global_position = ship.global_position
+	# Keep target pivot at ship position
+	target_pivot.global_position = ship.global_position
+
+
+func update_ui() -> void:
+	# Update speed indicator
+	tp_speed.value = (current_speed / max_speed) * 100.0
+
+	# Project aim points to screen and position crosshairs
+	if camera and ui_target and ui_actual:
+		# Target crosshair (where player is aiming)
+		var target_screen_pos := camera.unproject_position(target_aim_point.global_position)
+		ui_target.position = target_screen_pos - ui_target.size / 2.0
+
+		# Actual crosshair (where ship is pointing)
+		var actual_screen_pos := camera.unproject_position(actual_aim_point.global_position)
+		ui_actual.position = actual_screen_pos - ui_actual.size / 2.0
