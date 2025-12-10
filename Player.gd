@@ -11,6 +11,7 @@ extends Node3D
 @onready var ui_target = get_node("/root/Main/HUD/ui_soll")
 @onready var ui_actual = get_node("/root/Main/HUD/ui_ist")
 @onready var tp_speed = get_node("/root/Main/HUD/MarginContainer/tpSpeed")
+@onready var speed_label: Label = get_node("/root/Main/HUD/MarginContainer/SpeedLabel")
 
 # Mouse input
 var mouse_delta: Vector2 = Vector2.ZERO
@@ -22,9 +23,9 @@ var mouse_delta: Vector2 = Vector2.ZERO
 @export var ship_rotation_speed: float = 2.0
 
 # Movement
-@export var max_speed: float = 3.0 * 0.1
-@export var acceleration: float = 1.2 * 0.1
-@export var deceleration: float = 0.75 * 0.1
+@export var max_speed: float = 30.0
+@export var acceleration: float = 15.2
+@export var deceleration: float = 10.5
 var current_speed: float = 0.0
 
 
@@ -47,6 +48,10 @@ func _physics_process(delta: float) -> void:
 	handle_target_input(delta)
 	rotate_ship_toward_target(delta)
 	handle_movement(delta)
+
+	# Sync positions AFTER movement is complete
+	target_pivot.global_position = ship.global_position
+
 	update_ui()
 
 
@@ -65,7 +70,7 @@ func rotate_ship_toward_target(delta: float) -> void:
 	# Current forward direction of the ship
 	var current_forward: Vector3 = -ship.global_transform.basis.z.normalized()
 
-	# Calculate the rotation needed
+	# Only rotate if we're not already aligned
 	if current_forward.dot(target_direction) < 0.9999:
 		# Create a basis that looks at the target
 		var target_basis := Basis.looking_at(target_direction, Vector3.UP)
@@ -79,32 +84,43 @@ func rotate_ship_toward_target(delta: float) -> void:
 
 
 func handle_movement(delta: float) -> void:
-	# Accelerate while holding forward, decelerate otherwise
-	if Input.is_action_pressed("forward"):
-		current_speed = minf(current_speed + acceleration * delta, max_speed)
-	elif Input.is_action_pressed("back"):
-		current_speed = maxf(current_speed - acceleration * delta, -max_speed * 0.5)
+	# Player input
+	var input_thrust: float = 0.0
+	var fwd = Input.is_action_pressed("forward")
+	var back = Input.is_action_pressed("back")
+
+	if fwd:
+		input_thrust = acceleration
+	elif back:
+		input_thrust = -acceleration
+
+	# Apply thrust or drag
+	if input_thrust != 0.0:
+		current_speed += input_thrust * delta
+		current_speed = clampf(current_speed, -max_speed * 0.5, max_speed)
 	else:
-		# Gradually slow down when no input
-		if current_speed > 0:
-			current_speed = maxf(current_speed - deceleration * delta, 0.0)
-		elif current_speed < 0:
-			current_speed = minf(current_speed + deceleration * delta, 0.0)
+		# No input - apply drag to slow down
+		current_speed = move_toward(current_speed, 0.0, deceleration * delta)
 
-	# Move ship forward in its facing direction
-	var move_direction: Vector3 = -ship.global_transform.basis.z.normalized()
-	ship.velocity = move_direction * current_speed
-	ship.move_and_slide()
-
-	# Keep root node at ship position
-	global_position = ship.global_position
-	# Keep target pivot at ship position
-	target_pivot.global_position = ship.global_position
+	# Set velocity based on current speed
+	if current_speed != 0.0:
+		var move_direction: Vector3 = -ship.global_transform.basis.z.normalized()
+		ship.velocity = move_direction * current_speed
+		ship.move_and_slide()
+	else:
+		ship.velocity = Vector3.ZERO
 
 
 func update_ui() -> void:
-	# Update speed indicator
-	tp_speed.value = (current_speed / max_speed) * 100.0
+	# Update speed indicator (forward: 0-100%, reverse: 0 to -50%)
+	var max_reverse: float = max_speed * 0.5
+	if current_speed >= 0:
+		tp_speed.value = (current_speed / max_speed) * 100.0
+	else:
+		tp_speed.value = (current_speed / max_reverse) * 50.0
+
+	# Update speed label
+	speed_label.text = "%.1f" % current_speed
 
 	# Project aim points to screen and position crosshairs
 	if camera and ui_target and ui_actual:

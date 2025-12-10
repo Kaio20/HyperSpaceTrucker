@@ -98,10 +98,18 @@ offset_bottom = 602.0
 
 [node name="tpSpeed" type="TextureProgressBar" parent="HUD/MarginContainer"]
 layout_mode = 2
-value = 25.0
+min_value = -50.0
 fill_mode = 3
 texture_under = ExtResource("4")
 texture_progress = ExtResource("5")
+
+[node name="SpeedLabel" type="Label" parent="HUD/MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("4")
