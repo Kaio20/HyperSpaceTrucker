@@ -32,6 +32,7 @@ fog_depth_end = 192.7
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.96066, 0)
+use_collision = true
 size = Vector3(166.005, 15, 86.9413)
 material = SubResource("1")
 
