@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://dqwp7m3x2r4ht"]
+[gd_scene load_steps=7 format=3 uid="uid://dqwp7m3x2r4ht"]
 
 [ext_resource type="Script" path="res://Player.gd" id="1"]
 
@@ -7,6 +7,32 @@ radius = 0.509339
 height = 3.32466
 
 [sub_resource type="SeparationRayShape3D" id="2"]
+
+[sub_resource type="StandardMaterial3D" id="ImpactParticleMaterial"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0.7, 0.3, 1)
+emission_enabled = true
+emission = Color(1, 0.6, 0.2, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="ParticleProcessMaterial" id="ImpactProcessMaterial"]
+emission_shape = 1
+emission_sphere_radius = 0.3
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 5.0
+initial_velocity_max = 15.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.05
+scale_max = 0.15
+color = Color(1, 0.8, 0.4, 1)
+color_ramp = null
+
+[sub_resource type="SphereMesh" id="ImpactParticleMesh"]
+radius = 0.1
+height = 0.2
 
 [node name="Player" type="Node3D"]
 script = ExtResource("1")
@@ -33,6 +59,16 @@ shape = SubResource("1")
 
 [node name="ActualAimPoint" type="Node3D" parent="Ship"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+
+[node name="ImpactParticles" type="GPUParticles3D" parent="Ship"]
+emitting = false
+amount = 20
+one_shot = true
+explosiveness = 1.0
+lifetime = 0.4
+process_material = SubResource("ImpactProcessMaterial")
+draw_pass_1 = SubResource("ImpactParticleMesh")
+material_override = SubResource("ImpactParticleMaterial")
 
 [node name="TargetPivot" type="Node3D" parent="."]
 
